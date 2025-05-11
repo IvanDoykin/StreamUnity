@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Numerics;
 
 public class DungeonGenerator : MonoBehaviour
 {
@@ -91,16 +92,16 @@ public class DungeonGenerator : MonoBehaviour
 
         for (int i = 1; i < _rooms.Count; i++)
         {
-            Vector2 prevCenter = _rooms[i - 1].center;
-            Vector2 currCenter = _rooms[i].center;
+            UnityEngine.Vector2 previousCenter = _rooms[i - 1].center;
+            UnityEngine.Vector2 currentCenter = _rooms[i].center;
 
-            int dirX = (int)Mathf.Sign(currCenter.x - prevCenter.x);
-            for (int x = (int)prevCenter.x; x != (int)currCenter.x; x += dirX)
-                _map[x, (int)prevCenter.y] = false;
+            int dirX = (int)Mathf.Sign(currentCenter.x - previousCenter.x);
+            for (int x = (int)previousCenter.x; x != (int)currentCenter.x; x += dirX)
+                _map[x, (int)previousCenter.y] = false;
 
-            int dirY = (int)Mathf.Sign(currCenter.y - prevCenter.y);
-            for (int y = (int)prevCenter.y; y != (int)currCenter.y; y += dirY)
-                _map[(int)currCenter.x, y] = false;
+            int dirY = (int)Mathf.Sign(currentCenter.y - previousCenter.y);
+            for (int y = (int)previousCenter.y; y != (int)currentCenter.y; y += dirY)
+                _map[(int)currentCenter.x, y] = false;
         }
 
         for (int x = 0; x < _width; x++)
@@ -111,78 +112,130 @@ public class DungeonGenerator : MonoBehaviour
                 {
                     if (IsNeed(_map, x, y))
                     {
-                        var wall = Instantiate(_wallPrefab, new Vector3(x, y, 0), Quaternion.identity, _walls.transform);
-                        wall.GetComponent<SpriteRenderer>().sprite = _wallSprites[GetWallIndex(_map, x, y)];
+                        var wall = Instantiate(_wallPrefab, new UnityEngine.Vector3(x, y, 0), UnityEngine.Quaternion.identity, _walls.transform);
+
+                        var wallConfig = wall.AddComponent<WallConfig>();
+                        wallConfig.Initialize(x, y);
                     }
                 }
                 else
                 {
-                    Instantiate(_floorPrefab, new Vector3(x, y, 0), Quaternion.identity, _floors.transform);
+                    Instantiate(_floorPrefab, new UnityEngine.Vector3(x, y, 0), UnityEngine.Quaternion.identity, _floors.transform);
                 }
             }
         }
+
+        foreach (var wall in WallConfig.Walls)
+        {
+            var coordinates = wall.Key;
+            var sprite = wall.Value;
+
+            var wallInfo = GetWallInfo(_map, coordinates.Item1, coordinates.Item2);
+            sprite.gameObject.name = wallInfo.Item1.ToString();
+            sprite.sprite = _wallSprites[wallInfo.Item1];
+        }
     }
 
-    private int GetWallIndex(bool[,] map, int x, int y)
+    private (int, System.Numerics.Matrix4x4) GetWallInfo(bool[,] map, int x, int y)
     {
-        // Если это не стена — возвращаем -1 (не должно вызываться для пола)
-        if (!map[x, y]) return -1;
-
-        int width = map.GetLength(0);
-        int height = map.GetLength(1);
-
-        // Проверяем 8 соседних клеток (по часовой стрелке, начиная с верхнего левого)
-        bool[] neighbors = new bool[8] {
-        /* 0 */ x > 0      && y < height-1 && !map[x-1, y+1],  // Верхний левый (пол?)
-        /* 1 */                y < height-1 && !map[x,   y+1],  // Верхний
-        /* 2 */ x < width-1 && y < height-1 && !map[x+1, y+1],  // Верхний правый
-        /* 3 */ x < width-1                && !map[x+1,   y],  // Правый
-        /* 4 */ x < width-1 && y > 0      && !map[x+1, y-1],  // Нижний правый
-        /* 5 */                y > 0      && !map[x,   y-1],  // Нижний
-        /* 6 */ x > 0      && y > 0      && !map[x-1, y-1],  // Нижний левый
-        /* 7 */ x > 0                     && !map[x-1,   y]   // Левый
-    };
-
-        // Строим битовую маску (каждый бит — есть ли пол в направлении)
-        int bitmask = 0;
-        for (int i = 0; i < 8; i++)
+        var matrix = new System.Numerics.Matrix4x4(
+                0, 0, 0, 0,
+                0, -1, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0);
+        // Проверяем, что координаты в пределах карты и это стена
+        if (x < 0 || y < 0 || x >= map.GetLength(0) || y >= map.GetLength(1) || !map[x, y])
         {
-            if (neighbors[i]) bitmask |= (1 << i);
+            return (0, matrix); // Дефолтный вариант, если нет стены или координаты вне карты
         }
 
-        // Определяем тип стены по битовой маске
-        switch (bitmask)
+        // Проверяем наличие стен в соседних клетках (4 направления)
+        bool left = x > 0 && map[x - 1, y];
+        matrix.M21 = left ? 1 : 0;
+
+        bool right = x < map.GetLength(0) - 1 && map[x + 1, y] && WallConfig.Walls.TryGetValue((x + 1, y), out SpriteRenderer sprite1);
+        matrix.M23 = right ? 1 : 0;
+
+        bool top = y > 0 && map[x, y - 1] && WallConfig.Walls.TryGetValue((x, y - 1), out SpriteRenderer sprite2);
+        matrix.M12 = top ? 1 : 0;
+
+        bool bottom = y < map.GetLength(1) - 1 && map[x, y + 1] && WallConfig.Walls.TryGetValue((x, y + 1), out SpriteRenderer sprite3);
+        matrix.M32 = bottom ? 1 : 0;
+
+        // Проверяем углы (для П-образных и сложных конфигураций)
+        bool topLeft = x > 0 && y > 0 && map[x - 1, y - 1] && WallConfig.Walls.TryGetValue((x - 1, y - 1), out SpriteRenderer sprite4);
+        matrix.M11 = topLeft ? 1 : 0;
+
+        bool topRight = x < map.GetLength(0) - 1 && y > 0 && map[x + 1, y - 1] && WallConfig.Walls.TryGetValue((x + 1, y - 1), out SpriteRenderer sprite5);
+        matrix.M13 = topRight ? 1 : 0;
+
+        bool bottomLeft = x > 0 && y < map.GetLength(1) - 1 && map[x - 1, y + 1] && WallConfig.Walls.TryGetValue((x - 1, y + 1), out SpriteRenderer sprite6);
+        matrix.M31 = bottomLeft ? 1 : 0;
+
+        bool bottomRight = x < map.GetLength(0) - 1 && y < map.GetLength(1) - 1 && map[x + 1, y + 1] && WallConfig.Walls.TryGetValue((x + 1, y + 1), out SpriteRenderer sprite7);
+        matrix.M33 = bottomRight ? 1 : 0;
+
+        // Определяем тип стены
+        if (top && bottom && left && right)
         {
-            // Одиночные направления
-            case 0b00000010: return 0;  // Только верх (↑)
-            case 0b00001000: return 1;  // Только право (→)
-            case 0b00100000: return 2;  // Только низ (↓)
-            case 0b10000000: return 3;  // Только лево (←)
-
-            // Углы
-            case 0b00000011: return 4;  // Верх + верх-лево (┛)
-            case 0b00001100: return 5;  // Право + верх-право (┗)
-            case 0b00110000: return 6;  // Низ + низ-право (┏)
-            case 0b11000000: return 7;  // Лево + низ-лево (┓)
-
-            // Т-образные
-            case 0b00001010: return 8;  // Верх + право (┣)
-            case 0b00101000: return 9;  // Право + низ (┻)
-            case 0b10100000: return 10; // Низ + лево (┫)
-            case 0b10000010: return 11; // Лево + верх (┳)
-
-            // Перекрестки
-            case 0b00101010: return 12; // Верх + право + низ (┃)
-            case 0b10001000: return 13; // Право + лево + верх (━)
-            case 0b10101010: return 14; // Все 4 стороны (╋)
-
-            // Внутренние углы (для "выступов")
-            case 0b11000010: return 15; // Лево + верх + верх-лево (┛ + выступ)
-            case 0b00001110: return 16; // Право + верх + верх-право (┗ + выступ)
-            case 0b01110000: return 17; // Право + низ + низ-право (┏ + выступ)
-            case 0b11100000: return 18; // Лево + низ + низ-лево (┓ + выступ)
-
-            default: return 0; // Дефолтный вариант (не должно возникать при IsNeed)
+            return (0, matrix); // Внутренняя стена (все соседи — стены)
+        }
+        else if (top && bottom && !left && !right)
+        {
+            return (1, matrix); // Вертикальная стена (сверху и снизу стены, слева и справа — пусто)
+        }
+        else if (!top && !bottom && left && right)
+        {
+            return (2, matrix); // Горизонтальная стена (слева и справа стены, сверху и снизу — пусто)
+        }
+        else if (!top && bottom && left && !right)
+        {
+            return (3, matrix); // Левый верхний угол (нет верха и справа)
+        }
+        else if (!top && bottom && !left && right)
+        {
+            return (4, matrix); // Правый верхний угол (нет верха и слева)
+        }
+        else if (top && !bottom && left && !right)
+        {
+            return (5, matrix); // Левый нижний угол (нет низа и справа)
+        }
+        else if (top && !bottom && !left && right)
+        {
+            return (6, matrix); // Правый нижний угол (нет низа и слева)
+        }
+        else if (top && bottom && !left && right)
+        {
+            return (7, matrix); // Т-образное соединение (нет стены слева)
+        }
+        else if (top && bottom && left && !right)
+        {
+            return (8, matrix); // Т-образное соединение (нет стены справа)
+        }
+        // Дополнительные проверки для П-образных конфигураций
+        else if (!top && bottom && left && right)
+        {
+            // П-образная конфигурация сверху (нет верха, но есть слева и справа)
+            return (9, matrix); // Можно добавить новый индекс или выбрать подходящий из существующих
+        }
+        else if (top && !bottom && left && right)
+        {
+            // П-образная конфигурация снизу (нет низа, но есть слева и справа)
+            return (10, matrix);
+        }
+        else if (left && !right && top && bottom)
+        {
+            // П-образная конфигурация справа (нет правой стены)
+            return (11, matrix);
+        }
+        else if (!left && right && top && bottom)
+        {
+            // П-образная конфигурация слева (нет левой стены)
+            return (12, matrix);
+        }
+        else
+        {
+            return (0, matrix); // Дефолтный вариант
         }
     }
 
@@ -211,8 +264,8 @@ public class DungeonGenerator : MonoBehaviour
     {
         if (_rooms.Count > 0)
         {
-            Vector2 spawnPos = _rooms[0].center;
-            var player = Instantiate(_playerPrefab, new Vector3(spawnPos.x, spawnPos.y, 0), Quaternion.identity, _dungeon.transform);
+            UnityEngine.Vector2 spawnPos = _rooms[0].center;
+            var player = Instantiate(_playerPrefab, new UnityEngine.Vector3(spawnPos.x, spawnPos.y, 0), UnityEngine.Quaternion.identity, _dungeon.transform);
 
             var playerHealth = player.GetComponentInChildren<Health>();
             playerHealth.HasDied += Generate;
@@ -233,13 +286,13 @@ public class DungeonGenerator : MonoBehaviour
         Rect room = _rooms[Random.Range(0, _rooms.Count)];
         float x = Random.Range(room.x + 1, room.x + room.width - 1);
         float y = Random.Range(room.y + 1, room.y + room.height - 1);
-        Vector2 spikePosition = new Vector2((int)x, (int)y);
+        UnityEngine.Vector2 spikePosition = new UnityEngine.Vector2((int)x, (int)y);
 
-        if (Vector2.Distance(spikePosition, _rooms[0].center) <= _noTrapsRadius)
+        if (UnityEngine.Vector2.Distance(spikePosition, _rooms[0].center) <= _noTrapsRadius)
         {
             CreateTrap();
             return;
         }
-        Instantiate(_trapPrefab, new Vector3((int)x, (int)y, 0), Quaternion.identity, _traps.transform);
+        Instantiate(_trapPrefab, new UnityEngine.Vector3((int)x, (int)y, 0), UnityEngine.Quaternion.identity, _traps.transform);
     }
 }
