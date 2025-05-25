@@ -158,6 +158,7 @@ MonoBehaviour:
   _minRoomSize: 5
   _maxRoomSize: 15
   _trapCount: 20
+  _enemiesCount: 1
   _floorPrefab: {fileID: 8456257980851638293, guid: d06dccec9aa6a0a42852e76029671eda, type: 3}
   _wallPrefab: {fileID: 1130667982721172768, guid: 35330d62dbfab194d8e5e489cdcd7ecc, type: 3}
   _wallSprites:
@@ -181,6 +182,7 @@ MonoBehaviour:
   - {fileID: -745775780, guid: c2d3cfc0c075f344990e7b9b2765f252, type: 3}
   _playerPrefab: {fileID: 5509561639046921739, guid: 490a0117a137f964891b6ff44c3014f5, type: 3}
   _trapPrefab: {fileID: 4124100279826622408, guid: 4eeeefd23de7b0a4fb28b0011256a1ab, type: 3}
+  _enemyPrefab: {fileID: 8292057171344601988, guid: 28cfd558aa28e23498387d575dae3bdd, type: 3}
 --- !u!4 &1839078153
 Transform:
   m_ObjectHideFlags: 0

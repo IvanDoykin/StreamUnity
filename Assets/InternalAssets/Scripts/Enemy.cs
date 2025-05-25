@@ -1,0 +1,70 @@
+using UnityEngine;
+
+public class Enemy : MonoBehaviour
+{
+    private const float MoveInterval = 0.35f;
+    public AStarNavigator Navigator { get; private set; }
+
+    [SerializeField] private PlayerFinder _playerFinder;
+    [SerializeField] private float _snapSharpness = 10f; // –езкость "прит€гивани€"
+
+    private Vector2Int _currentGridPosition;
+    private Vector3 _targetWorldPosition;
+    private Vector3 _startMovePosition;
+    private float _moveTimer = 0f;
+    private float _moveProgress = 1f; // 1 = завершено
+
+    private void Start()
+    {
+        _playerFinder.PlayerHasLocated += Navigator.SetTarget;
+        _targetWorldPosition = transform.position;
+        _startMovePosition = transform.position;
+    }
+
+    private void OnDestroy()
+    {
+        _playerFinder.PlayerHasLocated -= Navigator.SetTarget;
+    }
+
+    public void Initialize(AStarNavigator navigator, Vector2Int currentGridPosition)
+    {
+        Navigator = navigator;
+        _currentGridPosition = currentGridPosition;
+    }
+
+    private void Update()
+    {
+        _moveTimer += Time.deltaTime;
+        if (_moveTimer >= MoveInterval && _moveProgress >= 1f)
+        {
+            _moveTimer = 0f;
+            CalculateNextStep();
+        }
+
+        if (_moveProgress < 1f)
+        {
+            _moveProgress = Mathf.Clamp01(_moveProgress + Time.deltaTime / MoveInterval);
+            float snapProgress = SnapInterpolation(_moveProgress, _snapSharpness);
+            transform.position = Vector3.Lerp(_startMovePosition, _targetWorldPosition, snapProgress);
+        }
+    }
+
+    private void CalculateNextStep()
+    {
+        _startMovePosition = _targetWorldPosition;
+        Vector2Int nextStep = Navigator.GetNextStep(_currentGridPosition);
+
+        if (nextStep != _currentGridPosition)
+        {
+            _currentGridPosition = nextStep;
+            _targetWorldPosition = CellMath.ConvertCellToWorldPosition(_currentGridPosition);
+            _moveProgress = 0f;
+        }
+    }
+
+    private float SnapInterpolation(float t, float sharpness)
+    {
+        // Snap-интерпол€ци€: быстро "прит€гиваетс€" к цели в конце движени€
+        return 1f - Mathf.Pow(1f - t, sharpness);
+    }
+}
