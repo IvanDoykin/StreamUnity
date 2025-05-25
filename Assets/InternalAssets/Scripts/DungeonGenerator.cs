@@ -112,6 +112,7 @@ public class DungeonGenerator : MonoBehaviour
                 {
                     if (IsNeed(_map, x, y))
                     {
+                        Instantiate(_floorPrefab, new UnityEngine.Vector3(x, y, 0), UnityEngine.Quaternion.identity, _floors.transform);
                         var wall = Instantiate(_wallPrefab, new UnityEngine.Vector3(x, y, 0), UnityEngine.Quaternion.identity, _walls.transform);
 
                         var wallConfig = wall.AddComponent<WallConfig>();
@@ -139,124 +140,79 @@ public class DungeonGenerator : MonoBehaviour
     private (int, System.Numerics.Matrix4x4) GetWallInfo(bool[,] map, int x, int y)
     {
         var matrix = new System.Numerics.Matrix4x4(
-                0, 0, 0, 0,
-                0, -1, 0, 0,
-                0, 0, 0, 0,
-                0, 0, 0, 0);
-        // Проверяем, что координаты в пределах карты и это стена
-        if (x < 0 || y < 0 || x >= map.GetLength(0) || y >= map.GetLength(1) || !map[x, y])
-        {
-            return (0, matrix); // Дефолтный вариант, если нет стены или координаты вне карты
-        }
+            0, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0);
 
-        // Проверяем наличие стен в соседних клетках (4 направления)
-        bool left = x > 0 && map[x - 1, y];
-        matrix.M21 = left ? 1 : 0;
+        // Заполняем матрицу соседями (1 - стена, 0 - пол или отсутствие)
+        matrix.M12 = (y > 0 && map[x, y - 1]) ? 1 : 0;          // Верх
+        matrix.M32 = (y < map.GetLength(1) - 1 && map[x, y + 1]) ? 1 : 0; // Низ
+        matrix.M21 = (x > 0 && map[x - 1, y]) ? 1 : 0;          // Лево
+        matrix.M23 = (x < map.GetLength(0) - 1 && map[x + 1, y]) ? 1 : 0; // Право
 
-        bool right = x < map.GetLength(0) - 1 && map[x + 1, y] && WallConfig.Walls.TryGetValue((x + 1, y), out SpriteRenderer sprite1);
-        matrix.M23 = right ? 1 : 0;
+        // Углы
+        matrix.M11 = (x > 0 && y > 0 && map[x - 1, y - 1]) ? 1 : 0;          // Верх-лево
+        matrix.M13 = (x < map.GetLength(0) - 1 && y > 0 && map[x + 1, y - 1]) ? 1 : 0; // Верх-право
+        matrix.M31 = (x > 0 && y < map.GetLength(1) - 1 && map[x - 1, y + 1]) ? 1 : 0; // Низ-лево
+        matrix.M33 = (x < map.GetLength(0) - 1 && y < map.GetLength(1) - 1 && map[x + 1, y + 1]) ? 1 : 0; // Низ-право
 
-        bool top = y > 0 && map[x, y - 1] && WallConfig.Walls.TryGetValue((x, y - 1), out SpriteRenderer sprite2);
-        matrix.M12 = top ? 1 : 0;
+        // Анализ матрицы для определения типа стены
+        bool top = matrix.M12 == 1;
+        bool bottom = matrix.M32 == 1;
+        bool left = matrix.M21 == 1;
+        bool right = matrix.M23 == 1;
 
-        bool bottom = y < map.GetLength(1) - 1 && map[x, y + 1] && WallConfig.Walls.TryGetValue((x, y + 1), out SpriteRenderer sprite3);
-        matrix.M32 = bottom ? 1 : 0;
+        bool topLeft = matrix.M11 == 1;
+        bool topRight = matrix.M13 == 1;
+        bool bottomLeft = matrix.M31 == 1;
+        bool bottomRight = matrix.M33 == 1;
 
-        // Проверяем углы (для П-образных и сложных конфигураций)
-        bool topLeft = x > 0 && y > 0 && map[x - 1, y - 1] && WallConfig.Walls.TryGetValue((x - 1, y - 1), out SpriteRenderer sprite4);
-        matrix.M11 = topLeft ? 1 : 0;
+        // Основные правила (приоритет важнее порядка проверок)
 
-        bool topRight = x < map.GetLength(0) - 1 && y > 0 && map[x + 1, y - 1] && WallConfig.Walls.TryGetValue((x + 1, y - 1), out SpriteRenderer sprite5);
-        matrix.M13 = topRight ? 1 : 0;
+        // Одиночная стена (нет соседей)
+        if (!top && !bottom && !left && !right) return (13, matrix); // Новый тип для одиночных стен
 
-        bool bottomLeft = x > 0 && y < map.GetLength(1) - 1 && map[x - 1, y + 1] && WallConfig.Walls.TryGetValue((x - 1, y + 1), out SpriteRenderer sprite6);
-        matrix.M31 = bottomLeft ? 1 : 0;
+        // Углы (проверяем сначала самые характерные случаи)
+        if (!top && !left && (right || bottom)) return (3, matrix);  // Левый верхний
+        if (!top && !right && (left || bottom)) return (4, matrix);  // Правый верхний
+        if (!bottom && !left && (right || top)) return (5, matrix);  // Левый нижний
+        if (!bottom && !right && (left || top)) return (6, matrix);  // Правый нижний
 
-        bool bottomRight = x < map.GetLength(0) - 1 && y < map.GetLength(1) - 1 && map[x + 1, y + 1] && WallConfig.Walls.TryGetValue((x + 1, y + 1), out SpriteRenderer sprite7);
-        matrix.M33 = bottomRight ? 1 : 0;
+        // Т-образные соединения
+        if (top && bottom && !left && right) return (7, matrix);  // Нет левой
+        if (top && bottom && left && !right) return (8, matrix);  // Нет правой
+        if (left && right && !top && bottom) return (9, matrix);  // Нет верха
+        if (left && right && top && !bottom) return (10, matrix); // Нет низа
 
-        // Определяем тип стены
-        if (top && bottom && left && right)
-        {
-            return (0, matrix); // Внутренняя стена (все соседи — стены)
-        }
-        else if (top && bottom && !left && !right)
-        {
-            return (1, matrix); // Вертикальная стена (сверху и снизу стены, слева и справа — пусто)
-        }
-        else if (!top && !bottom && left && right)
-        {
-            return (2, matrix); // Горизонтальная стена (слева и справа стены, сверху и снизу — пусто)
-        }
-        else if (!top && bottom && left && !right)
-        {
-            return (3, matrix); // Левый верхний угол (нет верха и справа)
-        }
-        else if (!top && bottom && !left && right)
-        {
-            return (4, matrix); // Правый верхний угол (нет верха и слева)
-        }
-        else if (top && !bottom && left && !right)
-        {
-            return (5, matrix); // Левый нижний угол (нет низа и справа)
-        }
-        else if (top && !bottom && !left && right)
-        {
-            return (6, matrix); // Правый нижний угол (нет низа и слева)
-        }
-        else if (top && bottom && !left && right)
-        {
-            return (7, matrix); // Т-образное соединение (нет стены слева)
-        }
-        else if (top && bottom && left && !right)
-        {
-            return (8, matrix); // Т-образное соединение (нет стены справа)
-        }
-        // Дополнительные проверки для П-образных конфигураций
-        else if (!top && bottom && left && right)
-        {
-            // П-образная конфигурация сверху (нет верха, но есть слева и справа)
-            return (9, matrix); // Можно добавить новый индекс или выбрать подходящий из существующих
-        }
-        else if (top && !bottom && left && right)
-        {
-            // П-образная конфигурация снизу (нет низа, но есть слева и справа)
-            return (10, matrix);
-        }
-        else if (left && !right && top && bottom)
-        {
-            // П-образная конфигурация справа (нет правой стены)
-            return (11, matrix);
-        }
-        else if (!left && right && top && bottom)
-        {
-            // П-образная конфигурация слева (нет левой стены)
-            return (12, matrix);
-        }
-        else
-        {
-            return (0, matrix); // Дефолтный вариант
-        }
+        // Прямые участки
+        if (!top && !bottom && left && right) return (2, matrix); // Горизонтальная
+        if (!left && !right && top && bottom) return (1, matrix); // Вертикальная
+
+        // Внутренние углы (для двойных стен)
+        if (top && left && !topLeft) return (14, matrix); // Внутренний угол верх-лево
+        if (top && right && !topRight) return (15, matrix); // Внутренний угол верх-право
+        if (bottom && left && !bottomLeft) return (16, matrix); // Внутренний угол низ-лево
+        if (bottom && right && !bottomRight) return (17, matrix); // Внутренний угол низ-право
+
+        // Дефолтный случай (внутренняя стена)
+        return (0, matrix);
     }
 
     private bool IsNeed(bool[,] map, int x, int y)
     {
-        if (!map[x, y]) return true;
-
-        int width = map.GetLength(0);
-        int height = map.GetLength(1);
-
+        // Стена не нужна, если она полностью окружена другими стенами
         if (x > 0 && !map[x - 1, y]) return true;
-        if (x < width - 1 && !map[x + 1, y]) return true;
+        if (x < map.GetLength(0) - 1 && !map[x + 1, y]) return true;
         if (y > 0 && !map[x, y - 1]) return true;
-        if (y < height - 1 && !map[x, y + 1]) return true;
+        if (y < map.GetLength(1) - 1 && !map[x, y + 1]) return true;
 
+        // Диагональные проверки для сложных случаев
         if (x > 0 && y > 0 && !map[x - 1, y - 1]) return true;
-        if (x > 0 && y < height - 1 && !map[x - 1, y + 1]) return true;
-        if (x < width - 1 && y > 0 && !map[x + 1, y - 1]) return true;
-        if (x < width - 1 && y < height - 1 && !map[x + 1, y + 1]) return true;
+        if (x > 0 && y < map.GetLength(1) - 1 && !map[x - 1, y + 1]) return true;
+        if (x < map.GetLength(0) - 1 && y > 0 && !map[x + 1, y - 1]) return true;
+        if (x < map.GetLength(0) - 1 && y < map.GetLength(1) - 1 && !map[x + 1, y + 1]) return true;
 
-        _map[x, y] = true;
         return false;
     }
 
