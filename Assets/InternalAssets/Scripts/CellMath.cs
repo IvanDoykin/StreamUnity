@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public static class CellMath
 {
@@ -11,6 +12,6 @@ public static class CellMath
 
     public static Vector2Int ConvertWorldToCellPosition(Vector2 position)
     {
-        return new Vector2Int((int)(position.x / CellSize), (int)(position.y / CellSize));
+        return new Vector2Int((int)Math.Round(position.x / CellSize), Mathf.FloorToInt(position.y / CellSize));
     }
 }

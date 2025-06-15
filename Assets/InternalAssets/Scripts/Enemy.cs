@@ -1,9 +1,12 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Enemy : MonoBehaviour
 {
     private const float MoveInterval = 0.35f;
     public AStarNavigator Navigator { get; private set; }
+
+    [SerializeField] private UnityEvent _hasMoved;
 
     [SerializeField] private PlayerFinder _playerFinder;
     [SerializeField] private float _snapSharpness = 10f; // –езкость "прит€гивани€"
@@ -56,9 +59,24 @@ public class Enemy : MonoBehaviour
 
         if (nextStep != _currentGridPosition)
         {
+            _hasMoved?.Invoke();
             _currentGridPosition = nextStep;
             _targetWorldPosition = CellMath.ConvertCellToWorldPosition(_currentGridPosition);
             _moveProgress = 0f;
+        }
+
+        else
+        {
+            var objects = Physics2D.OverlapCircleAll(transform.position, 2f);
+            foreach (var obj in objects)
+            {
+                var player = obj.GetComponent<PlayerMovement>();
+                if (player != null)
+                {
+                    player.GetComponent<Health>().TakeDamage(1);
+                    break;
+                }
+            }
         }
     }
 

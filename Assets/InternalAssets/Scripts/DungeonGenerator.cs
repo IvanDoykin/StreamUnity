@@ -30,7 +30,9 @@ public class DungeonGenerator : MonoBehaviour
     private Vector2Int _playerTestTarget;
 
     private List<Rect> _rooms = new List<Rect>();
+
     public bool[,] Map { get; private set; }
+    public bool[,] NavigationMap { get; private set; }
 
     public void Generate()
     {
@@ -38,6 +40,7 @@ public class DungeonGenerator : MonoBehaviour
         {
             _rooms.Clear();
             Destroy(_dungeon);
+            WallConfig.Walls.Clear();
         }
         _dungeon = new GameObject("Dungeon");
         _dungeon.transform.SetParent(transform);
@@ -83,7 +86,7 @@ public class DungeonGenerator : MonoBehaviour
             return;
         }
         Enemy enemy = Instantiate(_enemyPrefab, new UnityEngine.Vector3((int)x, (int)y, 0), UnityEngine.Quaternion.identity, _enemies.transform).GetComponent<Enemy>();
-        enemy.Initialize(new AStarNavigator(Map), new UnityEngine.Vector2Int((int)x, (int)y));
+        enemy.Initialize(new AStarNavigator(NavigationMap), new UnityEngine.Vector2Int((int)x, (int)y));
         enemy.Navigator.SetTarget(_playerTestTarget);
     }
 
@@ -93,6 +96,11 @@ public class DungeonGenerator : MonoBehaviour
         for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
                 Map[x, y] = true;
+
+        NavigationMap = new bool[_width, _height];
+        for (int x = 0; x < _width; x++)
+            for (int y = 0; y < _height; y++)
+                NavigationMap[x, y] = true;
     }
 
     private void CreateRooms()
@@ -120,8 +128,13 @@ public class DungeonGenerator : MonoBehaviour
             {
                 _rooms.Add(newRoom);
                 for (int x = (int)newRoom.x; x < newRoom.x + newRoom.width; x++)
+                {
                     for (int y = (int)newRoom.y; y < newRoom.y + newRoom.height; y++)
+                    {
                         Map[x, y] = false;
+                        NavigationMap[x, y] = false;
+                    }
+                }
             }
         }
 
@@ -132,11 +145,17 @@ public class DungeonGenerator : MonoBehaviour
 
             int dirX = (int)Mathf.Sign(currentCenter.x - previousCenter.x);
             for (int x = (int)previousCenter.x; x != (int)currentCenter.x; x += dirX)
+            {
                 Map[x, (int)previousCenter.y] = false;
+                NavigationMap[x, (int)previousCenter.y] = false;
+            }
 
             int dirY = (int)Mathf.Sign(currentCenter.y - previousCenter.y);
             for (int y = (int)previousCenter.y; y != (int)currentCenter.y; y += dirY)
+            {
                 Map[(int)currentCenter.x, y] = false;
+                NavigationMap[(int)currentCenter.x, y] = false;
+            }
         }
 
         for (int x = 0; x < _width; x++)
@@ -268,5 +287,7 @@ public class DungeonGenerator : MonoBehaviour
             return;
         }
         Instantiate(_trapPrefab, new UnityEngine.Vector3((int)x, (int)y, 0), UnityEngine.Quaternion.identity, _traps.transform);
+
+        NavigationMap[(int)x, (int)y] = true;
     }
 }
