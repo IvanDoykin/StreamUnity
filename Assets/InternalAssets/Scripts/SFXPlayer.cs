@@ -3,11 +3,19 @@ using UnityEngine;
 public class SFXPlayer : MonoBehaviour
 {
     [SerializeField] private AudioSource _source;
+    public AudioSource Source => _source;
+
     [SerializeField] private AudioClip[] _clips;
 
     public void Play()
     {
         _source.clip = _clips[0];
+        _source.Play();
+    }
+
+    public void Play(AudioClip clip)
+    {
+        _source.clip = clip;
         _source.Play();
     }
 

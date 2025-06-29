@@ -13,6 +13,8 @@ public class PlayerMovement : MonoBehaviour, IMovement
 
     private void Awake()
     {
+        NineSidesSFXPlayer.Instance.Initialize(this);
+
         _input = new PlayerKeyboardInput();
         _body = GetComponent<Rigidbody2D>();
     }

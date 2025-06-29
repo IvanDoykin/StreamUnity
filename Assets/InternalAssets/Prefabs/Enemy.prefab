@@ -91,7 +91,7 @@ GameObject:
   - component: {fileID: 2519507722485650088}
   - component: {fileID: 6779863050654962768}
   - component: {fileID: 7120188572263770667}
-  - component: {fileID: 5849819894346951990}
+  - component: {fileID: 2094527079599642994}
   - component: {fileID: 5892239313562997954}
   m_Layer: 0
   m_Name: Enemy
@@ -183,8 +183,8 @@ MonoBehaviour:
   _hasMoved:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 5849819894346951990}
-        m_TargetAssemblyTypeName: SFXPlayer, Assembly-CSharp
+      - m_Target: {fileID: 2094527079599642994}
+        m_TargetAssemblyTypeName: QuequedSFXPlayer, Assembly-CSharp
         m_MethodName: Play
         m_Mode: 1
         m_Arguments:
@@ -197,7 +197,7 @@ MonoBehaviour:
         m_CallState: 2
   _playerFinder: {fileID: 5203321755812033392}
   _snapSharpness: 10
---- !u!114 &5849819894346951990
+--- !u!114 &2094527079599642994
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -206,7 +206,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8292057171344601988}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39dd9bc11742ea34db19524f3b45a2fc, type: 3}
+  m_Script: {fileID: 11500000, guid: b130e04fa556a1d4597004431151ed7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _source: {fileID: 5892239313562997954}
@@ -233,7 +233,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 30
+  MaxDistance: 15
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -247,6 +247,15 @@ AudioSource:
       value: 1
       inSlope: 0
       outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.029773653
+      value: 0.42306322
+      inSlope: -1.4329727
+      outSlope: -1.4329727
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.33333334

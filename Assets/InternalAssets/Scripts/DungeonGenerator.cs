@@ -38,6 +38,8 @@ public class DungeonGenerator : MonoBehaviour
     {
         if (_dungeon != null)
         {
+            NineSidesSFXPlayer.Instance.Dispose();
+
             _rooms.Clear();
             Destroy(_dungeon);
             WallConfig.Walls.Clear();

@@ -73,8 +73,15 @@ public class SpriteAnimator : MonoBehaviour
         }
         else
         {
-            _renderer.flipX = _movement.Velocity.x < 0;
+            if (_movement.Velocity.x != 0)
+            {
+                _renderer.flipX = _movement.Velocity.x < 0;
+            }
             _renderer.sprite = _movementSprites[_spriteIndex];
         }
     }
 }
+
+// EnemyList = List<Transform>
+// Player = Transform
+// List<List<Transform>> enemyBySides

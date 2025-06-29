@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Bootstrap : MonoBehaviour
+public class Bootloader : MonoBehaviour
 {
     [SerializeField] private DungeonGenerator _generator;
 

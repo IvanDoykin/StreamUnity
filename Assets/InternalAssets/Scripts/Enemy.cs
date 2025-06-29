@@ -19,6 +19,8 @@ public class Enemy : MonoBehaviour
 
     private void Start()
     {
+        NineSidesSFXPlayer.Instance.AddEnemy(this);
+
         _playerFinder.PlayerHasLocated += Navigator.SetTarget;
         _targetWorldPosition = transform.position;
         _startMovePosition = transform.position;
@@ -26,6 +28,8 @@ public class Enemy : MonoBehaviour
 
     private void OnDestroy()
     {
+        NineSidesSFXPlayer.Instance.RemoveEnemy(this);
+
         _playerFinder.PlayerHasLocated -= Navigator.SetTarget;
     }
 
