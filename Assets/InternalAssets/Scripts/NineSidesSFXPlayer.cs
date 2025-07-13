@@ -16,7 +16,7 @@ public class NineSidesSFXPlayer : MonoBehaviour
     }
     private static NineSidesSFXPlayer _instance;
 
-    private const float _ninthSideDistance = 0f;
+    private const float _ninthSideDistance = 7.5f;
     private const float _degreesInOneSide = 360f / 8f;
 
     [SerializeField] private List<List<QuequedSFXPlayer>> _queuedPlayers;
@@ -42,6 +42,7 @@ public class NineSidesSFXPlayer : MonoBehaviour
         _sfxPlayers = null;
         _enemies = null;
         _queuedPlayers = null;
+        _instance = null;
     }
 
     public void AddEnemy(Enemy enemy)
@@ -58,7 +59,6 @@ public class NineSidesSFXPlayer : MonoBehaviour
     {
         if (Vector2.Distance(quequedSFXPlayer.transform.position, _player.position) < _ninthSideDistance)
         {
-            Debug.Break();
             if (_queuedPlayers[8].Count == 0)
             {
                 _queuedPlayers[8].Add(quequedSFXPlayer);
@@ -67,12 +67,17 @@ public class NineSidesSFXPlayer : MonoBehaviour
         }
         else
         {
-            float degree = Vector2.Angle(_player.transform.up, quequedSFXPlayer.transform.position - _player.transform.position) - _degreesInOneSide / 2f;
-            Debug.Log(degree);
+            float degree = Vector2.SignedAngle(_player.transform.up, quequedSFXPlayer.transform.position - _player.transform.position);
+
+            if (degree > 0)
+            {
+                degree = 360 - degree;
+            }
             if (degree < 0)
             {
-                degree = 360f + degree;
+                degree = -degree;
             }
+
             int sfxIndex = Mathf.CeilToInt(degree / _degreesInOneSide);
 
             if (_queuedPlayers[sfxIndex].Count == 0)

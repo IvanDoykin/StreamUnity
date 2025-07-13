@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6274608395488863216}
   - component: {fileID: 5203321755812033392}
   - component: {fileID: 5930208243990620455}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: PlayerFinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -92,8 +92,11 @@ GameObject:
   - component: {fileID: 6779863050654962768}
   - component: {fileID: 7120188572263770667}
   - component: {fileID: 2094527079599642994}
-  - component: {fileID: 5892239313562997954}
-  m_Layer: 0
+  - component: {fileID: 1906785343315288184}
+  - component: {fileID: 6304779516389061267}
+  - component: {fileID: 3186280439094650274}
+  - component: {fileID: 57389510239978444}
+  m_Layer: 3
   m_Name: Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -197,6 +200,7 @@ MonoBehaviour:
         m_CallState: 2
   _playerFinder: {fileID: 5203321755812033392}
   _snapSharpness: 10
+  _health: {fileID: 6304779516389061267}
 --- !u!114 &2094527079599642994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,10 +213,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b130e04fa556a1d4597004431151ed7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _source: {fileID: 5892239313562997954}
+  _source: {fileID: 1906785343315288184}
   _clips:
-  - {fileID: 8300000, guid: c1b2eb9b2f81100489abd9a25ce062d3, type: 3}
---- !u!82 &5892239313562997954
+  - {fileID: 8300000, guid: f2d270adddd692444a82a91717b4fd72, type: 3}
+--- !u!82 &1906785343315288184
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -247,15 +251,6 @@ AudioSource:
       value: 1
       inSlope: 0
       outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.029773653
-      value: 0.42306322
-      inSlope: -1.4329727
-      outSlope: -1.4329727
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.33333334
@@ -317,3 +312,91 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &6304779516389061267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8292057171344601988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 560310fd4bc595845b8db24ff752abf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hasDamaged:
+    m_PersistentCalls:
+      m_Calls: []
+  _value: 10
+--- !u!61 &3186280439094650274
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8292057171344601988}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 0.625, y: 0.5625}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.625, y: 0.5625}
+  m_EdgeRadius: 0
+--- !u!50 &57389510239978444
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8292057171344601988}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 0.0001
+  m_LinearDrag: 0
+  m_AngularDrag: 0
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 0

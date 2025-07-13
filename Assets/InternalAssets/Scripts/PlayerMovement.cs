@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour, IMovement
 {
+    [SerializeField] private Transform _hand;
+
     [Range(20f, 50f)]
     [SerializeField] private float _speed = 25f;
 
@@ -21,6 +23,17 @@ public class PlayerMovement : MonoBehaviour, IMovement
 
     private void Update()
     {
+        if (_movement.x > 0)
+        {
+            _hand.transform.localPosition = new Vector3(Mathf.Abs(_hand.transform.localPosition.x), _hand.transform.localPosition.y, _hand.transform.localPosition.z);
+            _hand.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
+        }
+        else if (_movement.x != 0)
+        {
+            _hand.transform.localPosition = new Vector3(-Mathf.Abs(_hand.transform.localPosition.x), _hand.transform.localPosition.y, _hand.transform.localPosition.z);
+            _hand.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
+        }
+
         _movement.x = _input.GetHorizontal();
         _movement.y = _input.GetVertical();
     }

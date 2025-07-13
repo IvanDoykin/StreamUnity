@@ -10,6 +10,7 @@ public class Enemy : MonoBehaviour
 
     [SerializeField] private PlayerFinder _playerFinder;
     [SerializeField] private float _snapSharpness = 10f; // –езкость "прит€гивани€"
+    [SerializeField] private Health _health;
 
     private Vector2Int _currentGridPosition;
     private Vector3 _targetWorldPosition;
@@ -20,6 +21,8 @@ public class Enemy : MonoBehaviour
     private void Start()
     {
         NineSidesSFXPlayer.Instance.AddEnemy(this);
+
+        _health.HasDied += () => Destroy(gameObject);
 
         _playerFinder.PlayerHasLocated += Navigator.SetTarget;
         _targetWorldPosition = transform.position;
