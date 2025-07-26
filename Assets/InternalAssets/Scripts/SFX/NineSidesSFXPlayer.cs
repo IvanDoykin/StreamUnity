@@ -1,10 +1,19 @@
 ﻿using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class NineSidesSFXPlayer : MonoBehaviour
 {
-    public static NineSidesSFXPlayer Instance => _instance;
+    public static NineSidesSFXPlayer Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<NineSidesSFXPlayer>();
+            }
+            return _instance;
+        }
+    }
     private static NineSidesSFXPlayer _instance;
 
     private const float _ninthSideDistance = 7.5f;
@@ -19,8 +28,7 @@ public class NineSidesSFXPlayer : MonoBehaviour
     {
         _enemies = new List<Transform>();
         _player = player.transform;
-        _instance = player.GetComponentInChildren<NineSidesSFXPlayer>();
-        _sfxPlayers = _instance.GetComponentsInChildren<SFXPlayer>();
+        _sfxPlayers = player.GetComponentInChildren<NineSidesSFXPlayer>().GetComponentsInChildren<SFXPlayer>();
         _queuedPlayers = new List<List<QuequedSFXPlayer>>();
         foreach (var sfxPlayer in _sfxPlayers)
         {

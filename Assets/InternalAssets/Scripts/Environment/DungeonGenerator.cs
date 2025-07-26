@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System.Numerics;
 
 public class DungeonGenerator : MonoBehaviour
 {
@@ -32,7 +31,7 @@ public class DungeonGenerator : MonoBehaviour
     private List<Rect> _rooms = new List<Rect>();
 
     public bool[,] Map { get; private set; }
-    public bool[,] NavigationMap { get; private set; }
+    public int[,] NavigationMap { get; private set; }
 
     public void Generate()
     {
@@ -63,19 +62,26 @@ public class DungeonGenerator : MonoBehaviour
         CreateRooms();
         CreatePlayer();
         CreateTraps();
-        CreateEnemies();
+
+        var enemies = CreateEnemies();
+        var arena = new Arena(this, enemies);
     }
 
-    private void CreateEnemies()
+    private Enemy[] CreateEnemies()
     {
+        Enemy[] enemies = new Enemy[_enemiesCount];
+        var navigator = new AStarNavigator(NavigationMap);
+
         for (int i = 0; i < _enemiesCount; i++)
         {
             if (_rooms.Count == 0) break;
-            CreateEnemy();
+            enemies[i] = CreateEnemy(navigator);
         }
+
+        return enemies;
     }
 
-    private void CreateEnemy()
+    private Enemy CreateEnemy(AStarNavigator navigator)
     {
         Rect room = _rooms[Random.Range(0, _rooms.Count)];
         float x = Random.Range(room.x + 1, room.x + room.width - 1);
@@ -84,12 +90,12 @@ public class DungeonGenerator : MonoBehaviour
 
         if (UnityEngine.Vector2.Distance(enemyPosition, _rooms[0].center) <= _noDangerRadius)
         {
-            CreateEnemy();
-            return;
+            return CreateEnemy(navigator);
         }
         Enemy enemy = Instantiate(_enemyPrefab, new UnityEngine.Vector3((int)x, (int)y, 0), UnityEngine.Quaternion.identity, _enemies.transform).GetComponent<Enemy>();
-        enemy.Initialize(new AStarNavigator(NavigationMap), new UnityEngine.Vector2Int((int)x, (int)y));
+        enemy.Initialize(navigator, new UnityEngine.Vector2Int((int)x, (int)y));
         enemy.Navigator.SetTarget(_playerTestTarget);
+        return enemy;
     }
 
     private void InitializeMap()
@@ -99,10 +105,10 @@ public class DungeonGenerator : MonoBehaviour
             for (int y = 0; y < _height; y++)
                 Map[x, y] = true;
 
-        NavigationMap = new bool[_width, _height];
+        NavigationMap = new int[_width, _height];
         for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
-                NavigationMap[x, y] = true;
+                NavigationMap[x, y] = 1;
     }
 
     private void CreateRooms()
@@ -134,7 +140,7 @@ public class DungeonGenerator : MonoBehaviour
                     for (int y = (int)newRoom.y; y < newRoom.y + newRoom.height; y++)
                     {
                         Map[x, y] = false;
-                        NavigationMap[x, y] = false;
+                        NavigationMap[x, y] = 0;
                     }
                 }
             }
@@ -149,14 +155,14 @@ public class DungeonGenerator : MonoBehaviour
             for (int x = (int)previousCenter.x; x != (int)currentCenter.x; x += dirX)
             {
                 Map[x, (int)previousCenter.y] = false;
-                NavigationMap[x, (int)previousCenter.y] = false;
+                NavigationMap[x, (int)previousCenter.y] = 0;
             }
 
             int dirY = (int)Mathf.Sign(currentCenter.y - previousCenter.y);
             for (int y = (int)previousCenter.y; y != (int)currentCenter.y; y += dirY)
             {
                 Map[(int)currentCenter.x, y] = false;
-                NavigationMap[(int)currentCenter.x, y] = false;
+                NavigationMap[(int)currentCenter.x, y] = 0;
             }
         }
 
@@ -290,6 +296,6 @@ public class DungeonGenerator : MonoBehaviour
         }
         Instantiate(_trapPrefab, new UnityEngine.Vector3((int)x, (int)y, 0), UnityEngine.Quaternion.identity, _traps.transform);
 
-        NavigationMap[(int)x, (int)y] = true;
+        NavigationMap[(int)x, (int)y] = 1;
     }
 }

@@ -11,7 +11,7 @@ public class AStarNavigator
     }
 
     private Vector2Int _target;
-    private bool[,] _map;
+    private int[,] _map;
     private PathNode[] _neighborsBuffer = new PathNode[4];
     private static readonly Vector2Int[] _directions = {
         Vector2Int.up,
@@ -20,9 +20,19 @@ public class AStarNavigator
         Vector2Int.left
     };
 
-    public AStarNavigator(bool[,] map)
+    public AStarNavigator(int[,] map)
     {
-        _map = (bool[,])map.Clone();
+        _map = (int[,])map.Clone();
+    }
+
+    public void Set(Vector2Int position)
+    {
+        _map[position.x, position.y] = 2;
+    }
+
+    public void Remove(Vector2Int position)
+    {
+        _map[position.x, position.y] = 0;
     }
 
     public Vector2Int GetNextStep(Vector2Int currentPosition)
@@ -109,7 +119,7 @@ public class AStarNavigator
         for (int i = 0; i < _directions.Length; i++)
         {
             var neighborPos = position + _directions[i];
-            if (IsPositionValid(neighborPos) && !_map[neighborPos.x, neighborPos.y])
+            if (IsPositionValid(neighborPos) && _map[neighborPos.x, neighborPos.y] != 1)
             {
                 _neighborsBuffer[count++].Position = neighborPos;
             }

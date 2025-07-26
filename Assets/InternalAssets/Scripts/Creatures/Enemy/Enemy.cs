@@ -4,7 +4,9 @@ using UnityEngine.Events;
 public class Enemy : MonoBehaviour
 {
     private const float MoveInterval = 0.35f;
+
     public AStarNavigator Navigator { get; private set; }
+    public Vector2Int Position => _currentGridPosition;
 
     [SerializeField] private UnityEvent _hasMoved;
 
@@ -66,6 +68,9 @@ public class Enemy : MonoBehaviour
 
         if (nextStep != _currentGridPosition)
         {
+            Navigator.Remove(_currentGridPosition);
+            Navigator.Set(nextStep);
+
             _hasMoved?.Invoke();
             _currentGridPosition = nextStep;
             _targetWorldPosition = CellMath.ConvertCellToWorldPosition(_currentGridPosition);

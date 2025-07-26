@@ -916,7 +916,7 @@ GameObject:
   - component: {fileID: 5825971746230318315}
   - component: {fileID: 6051410807544357824}
   - component: {fileID: 1422216896621562072}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1035,7 +1035,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _hand: {fileID: 5330973749901391133}
-  _speed: 25
+  _speed: 36.6
 --- !u!50 &3964466468785124357
 Rigidbody2D:
   serializedVersion: 4
@@ -2302,7 +2302,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0022613406, y: 0.48588234}
+  m_Offset: {x: -0.038770944, y: 0.27929994}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2313,7 +2313,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.18238023, y: 0.850315}
+  m_Size: {x: 0.9919221, y: 1.6119483}
   m_EdgeRadius: 0
 --- !u!1 &8599778417601274670
 GameObject:

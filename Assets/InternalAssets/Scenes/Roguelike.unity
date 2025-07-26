@@ -286,7 +286,7 @@ MonoBehaviour:
   _minRoomSize: 5
   _maxRoomSize: 15
   _trapCount: 20
-  _enemiesCount: 5
+  _enemiesCount: 25
   _floorPrefab: {fileID: 8456257980851638293, guid: d06dccec9aa6a0a42852e76029671eda, type: 3}
   _wallPrefab: {fileID: 1130667982721172768, guid: 35330d62dbfab194d8e5e489cdcd7ecc, type: 3}
   _wallSprites:
