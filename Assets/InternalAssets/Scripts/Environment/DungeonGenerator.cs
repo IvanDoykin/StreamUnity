@@ -42,7 +42,7 @@ public class DungeonGenerator : MonoBehaviour
 
             _rooms.Clear();
             Destroy(_dungeon);
-            WallConfig.Walls.Clear();
+            WallConfig.Dispose();
         }
         _dungeon = new GameObject("Dungeon");
         _dungeon.transform.SetParent(transform);

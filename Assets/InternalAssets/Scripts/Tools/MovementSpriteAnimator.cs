@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SpriteAnimator : MonoBehaviour
+public class MovementSpriteAnimator : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _renderer;
     [SerializeField] private Sprite[] _idleSprites;
@@ -9,8 +9,9 @@ public class SpriteAnimator : MonoBehaviour
     [SerializeField] private float _idleUpdateTime = 0.5f;
     [SerializeField] private float _movementUpdateTime = 0.35f;
 
-    private bool _isIdle = true;
     private IMovement _movement;
+    private bool _isIdle = true;
+
     private float _timer = 0f;
     private int _spriteIndex = 0;
 

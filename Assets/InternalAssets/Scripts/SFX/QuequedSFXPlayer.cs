@@ -3,8 +3,9 @@ using UnityEngine;
 
 public class QuequedSFXPlayer : MonoBehaviour
 {
-    [SerializeField] private AudioSource _source;
     public AudioSource Source => _source;
+    [SerializeField] private AudioSource _source;
+
 
     [SerializeField] private AudioClip[] _clips;
 
